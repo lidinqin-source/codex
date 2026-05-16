@@ -1,0 +1,5 @@
+# Runtime dependencies for affiliate report production scripts.
+google-analytics-data
+google-api-python-client
+google-auth
+requests

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Affiliate Data Analyst"
+  short_description: "eufyMake affiliate operating analytics"
+  default_prompt: "Use $affiliate-data-analyst to produce an auditable eufyMake affiliate data analysis."
+
+policy:
+  allow_implicit_invocation: true
