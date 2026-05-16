@@ -42,11 +42,22 @@ Tools are evidence requirements; subagents are execution helpers. Required evide
 
 Requirement clarification is a gate, not a casual preface. Use these rules before production data pulls:
 
-0. Apply the task tier first. Run `$requirement-checker` before asking the user for L2/L3 work, or for any L1 task whose scope is risky or ambiguous. Use it to identify explicit requirements, hidden requirements, missing scope, acceptance criteria, and likely blocking questions. If the tool/skill is unavailable, perform the same checklist manually and record the fallback.
+0. Apply the task tier first. Run `$requirement-checker` before asking the user for L2/L3 work, or for any L1 task whose scope is risky or ambiguous. Use it to identify explicit requirements, hidden requirements, missing scope, acceptance criteria, and likely blocking questions. For L2/L3, if `$requirement-checker` is unavailable, include it in the batch Tool Capability Inventory as a missing required capability and stop before production work; do not replace it with a manual checklist. For L0/L1 only, a manual checklist is acceptable when the task is not production-blocking.
 
 0a. For L2/L3, the first user-facing todo after reading the skill must be a blocking-scope gate, not source exploration. Do not create a plan where "explore existing report artifacts/data sources" appears before "confirm missing production scope" when the request lacks a required scope field. The blocking-scope gate checks only the user's request, current Asia/Shanghai date, and already named artifacts.
 
-0b. For L2/L3, Codex App Server `tool/requestUserInput` is a required capability whenever the blocking-scope gate needs a user choice. In model-facing tools this may appear as `request_user_input`; read `references/codex-question-tool.md` before applying fallback behavior. Verify that the capability is exposed and callable before presenting the choice. If it is not exposed, do not invent an `openai.yaml` dependency or emulate the tool with Markdown. Stop and tell the user that the runtime did not expose the required Question Tool; ask them to rerun in a Codex mode/client that exposes `tool/requestUserInput`, or to explicitly approve a non-tool fallback. Do not continue with source exploration, tool preflight, production pulls, or report generation until one of those happens.
+0b. For L2/L3, Codex App Server `tool/requestUserInput` is a required capability whenever the blocking-scope gate needs a user choice. In model-facing tools this may appear as `request_user_input`; read `references/codex-question-tool.md` before applying fallback behavior. Verify that the capability is exposed and callable before presenting the choice. If it is not exposed, do not invent an `openai.yaml` dependency, emulate the tool with Markdown, or accept a user-approved workaround. Run the batch Tool Capability Inventory in 0c, then stop and tell the user that the runtime did not expose the required Question Tool. Do not continue with source exploration, production pulls, or report generation until the required Question Tool is actually available.
+
+0c. Tool Capability Inventory is a read-only capability check, not source exploration and not production work. For L2/L3, run it as a batch whenever any required capability may be missing, including when `request_user_input` is missing before scope confirmation. Do not fail fast on the first missing tool. Check every tool that is required or conditionally required by the apparent request and report one matrix with:
+   - capability name
+   - required / conditional / optional
+   - why it is needed
+   - how availability was checked
+   - status: `available`, `not_exposed`, `unauthorized`, `setup_error`, `not_applicable`, or `unknown`
+   - repair attempts, when the runtime provides an official repair path
+   - blocking impact and next step
+
+   For a production affiliate report, the default inventory includes `tool/requestUserInput` / `request_user_input`, `$requirement-checker`, `$google-analytics`, `$mcp-impact-affiliate-orders`, `$mcp-commission-junction-affiliate-orders`, `$mcp-tradedoubler-affiliate-orders`, Google Sheets / `google-drive:google-sheets` or `Spreadsheets`, `$anker-brand-html-generation`, `browser:browser`, and any publish/deployment tool only if the user asks to publish. All required capabilities must be ready before the run can proceed. If one or more required capabilities remain unavailable, stop after reporting the full matrix instead of reporting only the first failure. Do not downgrade a required capability to optional, substitute another tool, use manual estimates, use Markdown as a tool replacement, or proceed based on user approval of a workaround.
 
 1. Capture current time in Asia/Shanghai before resolving relative dates:
 
@@ -54,7 +65,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 2. Convert all relative dates into absolute date ranges and record the base date used. Do not output only "last month", "yesterday", "MTD", or similar relative labels.
 
-3. Time range is mandatory for recurring reports. If the user asks for a monthly, weekly, daily, MTD, QTD, YTD, pacing, or comparison report without an explicit range, ask a clarification question before source exploration, tool availability preflight, production pulls, or report generation unless the user explicitly says to use defaults or to proceed without confirmation.
+3. Time range is mandatory for recurring reports. If the user asks for a monthly, weekly, daily, MTD, QTD, YTD, pacing, or comparison report without an explicit range, ask a clarification question before source exploration, production pulls, or report generation unless the user explicitly says to use defaults or to proceed without confirmation. A read-only Tool Capability Inventory may still run before this clarification so all missing tools can be reported together.
 
 4. For "monthly report" with no month:
    - Recommended option A is the most recent complete natural month based on the Asia/Shanghai run date.
@@ -74,7 +85,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 6. Ask for missing context only when it blocks correctness. Otherwise infer from workspace artifacts, naming conventions, existing report caveats, and project references, then record every important inference. Blocking examples include missing time range for a production recurring report, unclear market boundary, missing target source for target-pacing claims, or ambiguous platform date lens. Existing report directories, old scripts, and prior manifests may suggest options, but they must not become default authorization for a new L3 production run.
 
-7. Ask in business language and keep the interaction small. When a user-facing choice is needed for L2/L3, use Codex App Server `tool/requestUserInput` / `request_user_input`; do not emulate it with a Markdown question card unless the user explicitly approves that fallback. Present up to three short questions when using the tool, because the official app-server API is designed for 1-3 short questions. Explain the reason/impact for each, and make the recommended option `A` or clearly labeled `(Recommended)`. For L0/L1 only, a compact Markdown question card is acceptable when the formal Question Tool is unavailable and the answer is not production-blocking.
+7. Ask in business language and keep the interaction small. When a user-facing choice is needed for L2/L3, use Codex App Server `tool/requestUserInput` / `request_user_input`; do not emulate it with a Markdown question card. Present up to three short questions when using the tool, because the official app-server API is designed for 1-3 short questions. Explain the reason/impact for each, and make the recommended option `A` or clearly labeled `(Recommended)`. For L0/L1 only, a compact Markdown question card is acceptable when the formal Question Tool is unavailable and the answer is not production-blocking.
 
 8. After the blocking-scope gate passes, do source exploration before asking about non-blocking fields, filters, or metrics. For L1, do only the source checks needed for the requested answer. The exploration worker, either subagent or main-agent fallback, should verify the relevant source contract or existing artifact first:
    - GA4: property, timezone, currency, market boundary, dimensions, metrics, transaction fields, and filters.
@@ -83,7 +94,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - Google Sheets / local files: target, publisher, CRM, and mapping source availability.
    - Existing workspace: prior report caveats, run manifests, report bundles, and reusable scripts.
 
-9. Tool Availability Preflight is required for L2/L3 before production pulls or report generation. Declare the required tools for the scoped run, then verify each one is callable and authorized:
+9. Tool Availability Preflight is required for L2/L3 before production pulls or report generation. It must be batch-oriented, not fail-fast. Declare the required tools for the scoped run, then verify each one is callable and authorized:
    - Codex App Server `tool/requestUserInput` / `request_user_input` when user clarification or approval is required
    - GA4 / `$google-analytics`
    - Impact / `$mcp-impact-affiliate-orders`
@@ -92,7 +103,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - Google Sheets / `google-drive:google-sheets` or `Spreadsheets`
    - branded HTML generation and `browser:browser` for rendered HTML QA
 
-   If a required tool is missing, unavailable, unauthorized, or returns a setup error, do not use a workaround, substitute data source, manual estimate, or weakened evidence path. Try to repair the exact required capability up to three times, such as tool discovery/loading, account/property verification, auth/scope check, or retry through the official tool path. If it still fails after three attempts, stop before production work and tell the user exactly which required tool failed, what was tried, and what residual work is blocked.
+   If one or more required tools are missing, unavailable, unauthorized, or return setup errors, do not use a workaround, substitute data source, manual estimate, Markdown replacement, or weakened evidence path. Check every required or conditional capability before stopping. Try to repair exact required capabilities up to three times when an official repair path exists, such as tool discovery/loading, account/property verification, auth/scope check, or retry through the official tool path. If any required capability still fails, stop before production work and tell the user all failed required capabilities, what was tried, and what residual work is blocked. User approval cannot override missing required tools for L2/L3 production work; the actual required capabilities must be ready.
 
 10. Create or update the requirement snapshot in `run_manifest.json` for L2/L3 production-grade runs. At minimum it should contain:
    - `request_original`

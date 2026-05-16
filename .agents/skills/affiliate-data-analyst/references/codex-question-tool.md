@@ -26,11 +26,12 @@ For L2/L3 affiliate production work, if a blocking-scope gate needs a user choic
 1. Treat `tool/requestUserInput` / `request_user_input` as a required capability.
 2. Verify the capability is exposed before presenting the question.
 3. Use it for the user choice when available.
-4. If unavailable, stop and tell the user the runtime did not expose the required Question Tool.
-5. Do not continue with Markdown, free-text, source exploration, tool preflight, production pulls, or report generation unless the user explicitly approves a non-tool fallback.
+4. If unavailable, run the batch Tool Capability Inventory so the user receives all missing tool information in one report.
+5. Then stop and tell the user the runtime did not expose the required Question Tool.
+6. Do not continue with Markdown, free-text, source exploration, production pulls, or report generation. User approval cannot override the missing required tool for L2/L3 production work.
 
-## Fallback Language
+## Stop Message
 
 When unavailable, say:
 
-`Required Question Tool is not exposed in this runtime, so I cannot collect the L2/L3 production clarification through the approved tool path. Please rerun this in a Codex mode/client that exposes tool/requestUserInput, or explicitly approve a Markdown fallback for this run.`
+`Required Question Tool is not exposed in this runtime, so I cannot collect the L2/L3 production clarification through the approved tool path. I checked the rest of the required capabilities in the tool matrix below. Please rerun this in a Codex mode/client that exposes tool/requestUserInput; I cannot proceed through a Markdown or manual fallback for L2/L3 production work.`
