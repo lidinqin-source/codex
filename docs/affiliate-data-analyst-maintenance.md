@@ -70,7 +70,7 @@ git push origin main
 - 新增、删除或改名任何工具/平台能力时，先更新 `references/tool-capability-standard.md`，再更新 `SKILL.md` 的最小流程引用和维护指南。
 - 不能用手工估算、替代工具或弱证据绕过必需 source tool。
 - L2/L3 要使用 `requirement-checker` 做需求覆盖核验。
-- `browser:browser` 是生产 HTML QA 工具。
+- `browser:browser` 是生产 HTML QA 工具；实际调用面是 Browser skill 通过 `node_repl` 的 `js` 工具加载 `browser-client.mjs`，不要幻想有一个直接的 browser open 工具。
 - Playwright 可以辅助调试，但不是 L3 生产 QA 的 fallback。
 - `report_bundle.json` 命名规则保持统一：`report_title`、`report`、`report.source_files`。
 

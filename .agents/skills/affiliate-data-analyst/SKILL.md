@@ -101,7 +101,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - CJ / `$mcp-commission-junction-affiliate-orders`
    - TradeDoubler / `$mcp-tradedoubler-affiliate-orders`
    - Google Sheets / `google-drive:google-sheets` or `Spreadsheets`
-   - branded HTML generation and `browser:browser` for rendered HTML QA
+   - branded HTML generation and `browser:browser` for rendered HTML QA; the Browser skill is called through `node_repl` `js` and the Browser `browser-client.mjs` bootstrap, not through an invented direct browser tool
 
    If one or more required tools are missing, unavailable, unauthorized, or return setup errors, do not use a workaround, substitute data source, manual estimate, Markdown replacement, or weakened evidence path. Check every required or conditional capability before stopping. Try to repair exact required capabilities up to three times when an official repair path exists, such as tool discovery/loading, account/property verification, auth/scope check, or retry through the official tool path. If any required capability still fails, stop before production work and tell the user all failed required capabilities, what was tried, and what residual work is blocked. User approval cannot override missing required tools for L2/L3 production work; the actual required capabilities must be ready.
 
@@ -180,7 +180,7 @@ Use these capabilities as tools under this skill:
 - `Spreadsheets` for target workbooks, publisher mappings, CSV / XLSX inspection, formulas, charts, and spreadsheet artifacts.
 - `google-drive:google-sheets` for connected Google Sheets lookup or edits when source data lives in Google Sheets.
 - `$anker-brand-html-generation` for ANKER / eufyMake branded self-contained HTML report output.
-- `browser:browser` for opening, previewing, screenshotting, and verifying local HTML reports.
+- `browser:browser` for opening, previewing, screenshotting, and verifying local HTML reports through the official Browser skill bootstrap with `node_repl` `js`.
 - `build-web-apps:frontend-testing-debugging` for debugging local report UI, layout, console errors, and responsive rendering.
 - `cloudflare:wrangler` or `cloudflare:cloudflare` for cloud hosting / deployment only when the user asks to publish the report.
 - Built-in web search for external data plan research when current public context is needed.
