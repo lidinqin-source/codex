@@ -16,8 +16,8 @@ Task tiers:
 
 - L0 quick answer / file lookup: answer from a named artifact, simple command, or existing report. `update_plan`, `$requirement-checker`, subagents, and manifests are usually unnecessary.
 - L1 single-source query / small edit: confirm the minimum scope, source lens, and output. Use tools required for the evidence source; usually skip `$requirement-checker` and subagents unless risk is high.
-- L2 multi-source analysis / reconciliation / attribution: use `update_plan`, `$requirement-checker` preflight, source exploration, and structured evidence notes. Use source-specific subagents when the runtime/user allows them; otherwise do the same exploration locally and record the fallback.
-- L3 production report / recurring report / leadership output: use the full workflow: `update_plan`, `$requirement-checker` preflight and final gate, source exploration, production pulls, `run_manifest.json`, `report_bundle.json` or `report_meta.json`, audit files, report generation, and rendered QA.
+- L2 multi-source analysis / reconciliation / attribution: use `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, and structured evidence notes. Use source-specific subagents when the runtime/user allows them; otherwise do the same exploration locally and record the fallback.
+- L3 production report / recurring report / leadership output: use the full workflow in this order: `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, final requirement gate, production pulls, `run_manifest.json`, `report_bundle.json` or `report_meta.json`, audit files, report generation, and rendered QA.
 
 Tools are evidence requirements; subagents are execution helpers. Required evidence must still be gathered even if subagents are unavailable. If a tier rule is skipped, record a concise `skipped_reason` in the final answer for L0/L1 or in `run_manifest.json` for L2/L3.
 
@@ -27,8 +27,9 @@ Tools are evidence requirements; subagents are execution helpers. Required evide
 - TASK: turn either clear or unclear user's natural language affiliate data / business questions into scoped data pulls and artifact requirements.
 
 - Subagents:
-  - Use a requirement / source-exploration subagent before user clarification when the run is production-grade, multi-source, ambiguous, or asks for a new data source, and the runtime/user allows subagents.
+  - Use a requirement / source-exploration subagent after the blocking-scope gate when the run is production-grade, multi-source, ambiguous, or asks for a new data source, and the runtime/user allows subagents.
   - Assign one bounded exploration question per independent source surface, such as GA4 property/date scope, Impact Actions, CJ commission detail, TradeDoubler transactions, Google Sheets targets/publisher mappings, or existing workspace artifacts.
+  - Do not ask a source-exploration subagent to infer or choose a missing production period, market, cadence, or output target. Those are blocking scope questions for the main agent to confirm with the user.
   - If subagents are unavailable or not allowed in the current runtime, the main agent must perform the same read-only exploration steps locally and record the fallback in `run_manifest.json`.
 - Tools Use:
   - `$requirement-checker` as a conditional gate: optional for L0/L1, mandatory preflight for L2, and mandatory preflight plus final acceptance gate for L3
@@ -42,13 +43,15 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 0. Apply the task tier first. Run `$requirement-checker` before asking the user for L2/L3 work, or for any L1 task whose scope is risky or ambiguous. Use it to identify explicit requirements, hidden requirements, missing scope, acceptance criteria, and likely blocking questions. If the tool/skill is unavailable, perform the same checklist manually and record the fallback.
 
+0a. For L2/L3, the first user-facing todo after reading the skill must be a blocking-scope gate, not source exploration. Do not create a plan where "explore existing report artifacts/data sources" appears before "confirm missing production scope" when the request lacks a required scope field. The blocking-scope gate checks only the user's request, current Asia/Shanghai date, and already named artifacts.
+
 1. Capture current time in Asia/Shanghai before resolving relative dates:
 
    `TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S'`
 
 2. Convert all relative dates into absolute date ranges and record the base date used. Do not output only "last month", "yesterday", "MTD", or similar relative labels.
 
-3. Time range is mandatory for recurring reports. If the user asks for a monthly, weekly, daily, MTD, QTD, YTD, pacing, or comparison report without an explicit range, ask a clarification question before production pulls unless the user explicitly says to use defaults or to proceed without confirmation.
+3. Time range is mandatory for recurring reports. If the user asks for a monthly, weekly, daily, MTD, QTD, YTD, pacing, or comparison report without an explicit range, ask a clarification question before source exploration, tool availability preflight, production pulls, or report generation unless the user explicitly says to use defaults or to proceed without confirmation.
 
 4. For "monthly report" with no month:
    - Recommended option A is the most recent complete natural month based on the Asia/Shanghai run date.
@@ -66,11 +69,11 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - output artifacts, such as HTML report, Markdown, CSV audits, reconciliation files, or action list
    - whether target pacing is required and where the target source lives
 
-6. Ask for missing context only when it blocks correctness. Otherwise infer from workspace artifacts, naming conventions, existing report caveats, and project references, then record every important inference. Blocking examples include missing time range for a production recurring report, unclear market boundary, missing target source for target-pacing claims, or ambiguous platform date lens.
+6. Ask for missing context only when it blocks correctness. Otherwise infer from workspace artifacts, naming conventions, existing report caveats, and project references, then record every important inference. Blocking examples include missing time range for a production recurring report, unclear market boundary, missing target source for target-pacing claims, or ambiguous platform date lens. Existing report directories, old scripts, and prior manifests may suggest options, but they must not become default authorization for a new L3 production run.
 
 7. Ask in business language and keep the interaction small. When a user-facing choice is needed, present up to five questions at once, explain the reason/impact for each, and make the recommended option `A` or clearly labeled `(Recommended)`. Use a question tool when one is available; otherwise use a compact Markdown question card.
 
-8. For L2/L3, do source exploration before asking about fields, filters, or metrics. For L1, do only the source checks needed for the requested answer. The exploration worker, either subagent or main-agent fallback, should verify the relevant source contract or existing artifact first:
+8. After the blocking-scope gate passes, do source exploration before asking about non-blocking fields, filters, or metrics. For L1, do only the source checks needed for the requested answer. The exploration worker, either subagent or main-agent fallback, should verify the relevant source contract or existing artifact first:
    - GA4: property, timezone, currency, market boundary, dimensions, metrics, transaction fields, and filters.
    - Impact: read `references/impact-actions-standard.md`; verify advertiser account, `Actions` date semantics, action ID, `EventDate`, country field, amount, payout, status, and pagination behavior.
    - CJ / TradeDoubler: read `references/platform-context.md`; verify advertiser/account configuration, launch or active-program context, date lenses, status fields, order ID, amount, commission, and zero-row caveats.

@@ -59,6 +59,8 @@ git push origin main
 
 如果是 L2/L3 修改，要确认这些规则没有被破坏：
 
+- L2/L3 的第一个用户侧 todo 应该是 blocking-scope gate，而不是 source exploration。
+- 生产月报、周报、日报如果缺时间范围，必须先用绝对日期向用户确认，不能用旧目录或旧脚本自动决定范围。
 - 生产任务开始前必须做 Tool Availability Preflight。
 - 必需工具不可用时，最多尝试修复 3 次；仍不可用就停止并告知用户。
 - 不能用手工估算、替代工具或弱证据绕过必需 source tool。
