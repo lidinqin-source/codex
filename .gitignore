@@ -1,0 +1,28 @@
+.DS_Store
+*.tmp
+*.bak
+*.log
+
+# Local runtime/cache files
+.env
+.env.*
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.py[cod]
+
+# Generated report artifacts stay local by default.
+# Promote a specific report artifact with `git add -f <path>` only after review.
+affiliate_reports/
+reports/
+output/
+
+# One-off production scripts often contain hardcoded date/market paths.
+# Reusable scripts should live under .agents/skills/<skill-name>/scripts/.
+scripts/
+
+# Historical standalone reference copied into the skill package.
+goal-pacing.md
