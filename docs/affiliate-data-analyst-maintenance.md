@@ -1,12 +1,12 @@
-# Affiliate Data Analyst Maintenance Guide
+# Affiliate Data Analyst 维护指南
 
-## Purpose
+## 目的
 
-This repository tracks the reusable affiliate reporting skill package, not every local report run. Keep the skill small, auditable, and safe to reuse across market, cadence, and platform variants.
+这个仓库用于维护可复用的 affiliate reporting skill，不用于保存每一次本地报告运行的全部产物。维护目标是让 skill 保持小、清晰、可审计，并且能适配不同市场、不同周期和不同平台。
 
-## Commit Policy
+## 提交规则
 
-Commit these by default:
+默认应该提交：
 
 - `.agents/skills/affiliate-data-analyst/SKILL.md`
 - `.agents/skills/affiliate-data-analyst/agents/`
@@ -16,20 +16,22 @@ Commit these by default:
 - `.gitignore`
 - `docs/`
 
-Do not commit these by default:
+默认不要提交：
 
 - `affiliate_reports/`
 - `reports/`
 - `output/`
-- top-level `scripts/`
-- top-level scratch reference files such as `goal-pacing.md`
-- credentials, tokens, browser sessions, raw platform exports, or local caches
+- 顶层 `scripts/`
+- 顶层临时参考文件，例如 `goal-pacing.md`
+- 任何凭证、token、浏览器 session、原始平台导出、缓存文件
 
-If a generated artifact must be preserved for audit, add it intentionally with `git add -f <path>` and explain why in the commit message.
+如果某个报告产物必须作为审计证据保存，需要显式使用 `git add -f <path>`，并在 commit message 里说明为什么这个产物值得进入版本库。
 
-## Safe Git Workflow
+## 安全 Git 流程
 
-Use targeted staging. Do not use `git add .` in this repo.
+这个仓库不要使用 `git add .`。原因是本地经常会生成报告、截图、脚本和数据文件，直接全量 add 容易误提交。
+
+推荐流程：
 
 ```bash
 git status --short --untracked-files=all
@@ -38,7 +40,7 @@ git status --short
 git commit -m "Maintain affiliate data analyst skill"
 ```
 
-Push only after reviewing the staged diff:
+push 前先看 staged diff：
 
 ```bash
 git diff --cached --stat
@@ -46,43 +48,43 @@ git diff --cached
 git push origin main
 ```
 
-## Skill Change Checklist
+## Skill 修改检查表
 
-Before editing, classify the request:
+修改前先判断任务层级：
 
-- L0: quick explanation or read-only orientation.
-- L1: lightweight local file update.
-- L2: report logic, source rules, or validation behavior.
-- L3: production report generation or final report QA.
+- L0：快速解释、只读查看、方向判断。
+- L1：轻量本地文件修改。
+- L2：报告逻辑、数据源规则、验证行为。
+- L3：生产报告生成或最终 HTML 报告 QA。
 
-For L2/L3 changes, verify that the skill still preserves these rules:
+如果是 L2/L3 修改，要确认这些规则没有被破坏：
 
-- Tool Availability Preflight happens before production work.
-- Required tools are repaired up to 3 times; if still unavailable, stop and tell the user.
-- No unsupported workaround replaces a required source tool.
-- `requirement-checker` is used for L2/L3 requirement coverage.
-- `browser:browser` is the production HTML QA tool.
-- Playwright may support debugging, but it is not the L3 production QA fallback.
-- Report bundle schema uses `report_title`, `report`, and `report.source_files`.
+- 生产任务开始前必须做 Tool Availability Preflight。
+- 必需工具不可用时，最多尝试修复 3 次；仍不可用就停止并告知用户。
+- 不能用手工估算、替代工具或弱证据绕过必需 source tool。
+- L2/L3 要使用 `requirement-checker` 做需求覆盖核验。
+- `browser:browser` 是生产 HTML QA 工具。
+- Playwright 可以辅助调试，但不是 L3 生产 QA 的 fallback。
+- `report_bundle.json` 命名规则保持统一：`report_title`、`report`、`report.source_files`。
 
-## Platform Context
+## 平台上下文维护
 
-Keep platform-specific context in references, not scattered through the main workflow:
+平台规则应该放在 references 里，不要散落在主流程里：
 
-- `references/platform-context.md`: launch timing, zero-row interpretation, platform caveats.
-- `references/impact-actions-standard.md`: Impact Actions pull and reconciliation rules.
-- `references/measurement-contract.md`: metric definitions and reconciliation contract.
-- `references/reconciliation-and-artifacts.md`: artifact requirements and evidence packaging.
-- `references/weekly-report-standard.md`: cadence-specific output expectations.
-- `references/goal-pacing.md`: target and pacing logic.
+- `references/platform-context.md`：平台上线时间、0 行数据解释、平台 caveat。
+- `references/impact-actions-standard.md`：Impact Actions 拉数和 reconciliation 规则。
+- `references/measurement-contract.md`：指标定义和对账口径。
+- `references/reconciliation-and-artifacts.md`：产物要求和证据打包规则。
+- `references/weekly-report-standard.md`：周报周期的输出标准。
+- `references/goal-pacing.md`：目标和 pacing 逻辑。
 
-When CJ, Impact, TradeDoubler, GA4, or Google Sheets behavior changes, update the relevant reference first, then add only the minimum main `SKILL.md` rule needed to enforce it.
+CJ、Impact、TradeDoubler、GA4 或 Google Sheets 的行为如果变化，优先更新对应 reference。只有当主流程必须强制执行某条规则时，才把最小必要规则写进 `SKILL.md`。
 
-## Runtime Maintenance
+## Runtime 维护
 
-Keep Python dependencies in `requirements.txt`. Do not assume a preinstalled Python environment has GA4 or Google API packages.
+Python 依赖统一维护在 `requirements.txt`。不要假设 Codex 环境或系统 Python 已经安装 GA4 / Google API 相关包。
 
-For local verification:
+本地验证环境：
 
 ```bash
 python3 -m venv .venv
@@ -90,11 +92,11 @@ python3 -m venv .venv
 python3 -m pip install -r requirements.txt
 ```
 
-If this repo is used by an automated Codex environment, create a dedicated local environment setup step that installs `requirements.txt` before production runs.
+如果这个仓库后续用于自动化 Codex 环境，需要补一个专门的 local environment setup step，在生产任务前安装 `requirements.txt`。
 
-## Audit Commands
+## 审计命令
 
-Run these before reporting a skill maintenance pass as complete:
+每次 skill 维护完成后，建议跑：
 
 ```bash
 git status --short --untracked-files=all
@@ -103,17 +105,17 @@ find .agents/skills/affiliate-data-analyst -name '.DS_Store' -print
 python3 -m py_compile scripts/*.py 2>/dev/null || true
 ```
 
-The `rg` command should return no active-rule matches. Historical `run-log.md` may contain old incident language and should not be rewritten unless the history itself is wrong.
+`rg` 命令不应该命中 active rule。历史 `run-log.md` 里可能保留旧事故语言，除非历史事实本身写错，否则不要为了“清爽”重写历史。
 
-## Report Artifact Promotion
+## 报告产物如何进入版本库
 
-Generated reports are ignored by default because they can contain order-level commercial data and run-specific evidence.
+生成的报告默认被 `.gitignore` 忽略，因为它们可能包含订单级商业数据和一次性运行证据。
 
-Promote an artifact only when all are true:
+只有同时满足这些条件时，才考虑提交报告产物：
 
-- The user explicitly wants it versioned.
-- Raw rows and sensitive fields have been reviewed.
-- The artifact is useful beyond one local run.
-- The commit message names the market, period, cadence, and reason.
+- 用户明确要求保存到版本库。
+- 已检查原始行级数据和敏感字段。
+- 这个产物对后续复盘或复用有价值，不只是一次本地运行结果。
+- commit message 写清楚市场、时间范围、周期和提交原因。
 
-Prefer promoting reusable rules into the skill references instead of committing one-off report outputs.
+优先把可复用规则沉淀到 skill references，不要把一次性报告产物当作长期标准。
