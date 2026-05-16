@@ -16,10 +16,10 @@ Task tiers:
 
 - L0 quick answer / file lookup: answer from a named artifact, simple command, or existing report. `update_plan`, `$requirement-checker`, subagents, and manifests are usually unnecessary.
 - L1 single-source query / small edit: confirm the minimum scope, source lens, and output. Use tools required for the evidence source; usually skip `$requirement-checker` and subagents unless risk is high.
-- L2 multi-source analysis / reconciliation / attribution: use `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, and structured evidence notes. Use source-specific subagents when the runtime/user allows them; otherwise do the same exploration locally and record the fallback.
+- L2 multi-source analysis / reconciliation / attribution: use `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, and structured evidence notes. Use source-specific subagents when the runtime/user allows them; otherwise do the same exploration locally and record the execution path.
 - L3 production report / recurring report / leadership output: use the full workflow in this order: `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, final requirement gate, production pulls, `run_manifest.json`, `report_bundle.json` or `report_meta.json`, audit files, report generation, and rendered QA.
 
-Tools are evidence requirements; subagents are execution helpers. Required evidence must still be gathered even if subagents are unavailable. If a tier rule is skipped, record a concise `skipped_reason` in the final answer for L0/L1 or in `run_manifest.json` for L2/L3.
+Tools are evidence requirements; subagents are execution helpers. Required evidence must still be gathered through ready source tools even if subagents are unavailable. If a user or runtime policy makes a subagent mandatory for a run, include it in the Tool Capability Inventory as a required capability. If a tier rule is skipped, record a concise `skipped_reason` in the final answer for L0/L1 or in `run_manifest.json` for L2/L3.
 
 
 ### 01. Requirement clarification
@@ -30,11 +30,11 @@ Tools are evidence requirements; subagents are execution helpers. Required evide
   - Use a requirement / source-exploration subagent after the blocking-scope gate when the run is production-grade, multi-source, ambiguous, or asks for a new data source, and the runtime/user allows subagents.
   - Assign one bounded exploration question per independent source surface, such as GA4 property/date scope, Impact Actions, CJ commission detail, TradeDoubler transactions, Google Sheets targets/publisher mappings, or existing workspace artifacts.
   - Do not ask a source-exploration subagent to infer or choose a missing production period, market, cadence, or output target. Those are blocking scope questions for the main agent to confirm with the user.
-  - If subagents are unavailable or not allowed in the current runtime, the main agent must perform the same read-only exploration steps locally and record the fallback in `run_manifest.json`.
+  - If subagents are unavailable or not allowed in the current runtime, the main agent must perform the same read-only exploration steps locally and record that execution path in `run_manifest.json`. This does not relax any source-tool requirement.
 - Tools Use:
   - Codex App Server `tool/requestUserInput`, surfaced in some runtimes as `request_user_input`, for L2/L3 user-facing blocking-scope gates and required clarification choices
   - `$requirement-checker` as a conditional gate: optional for L0/L1, mandatory preflight for L2, and mandatory preflight plus final acceptance gate for L3
-  - `references/codex-question-tool.md`, `references/measurement-contract.md`, `references/reconciliation-and-artifacts.md`, `references/operating-review.md`, `references/platform-context.md`, and the report-standard reference that matches the requested cadence
+  - `references/tool-capability-standard.md`, `references/codex-question-tool.md`, `references/measurement-contract.md`, `references/reconciliation-and-artifacts.md`, `references/operating-review.md`, `references/platform-context.md`, and the report-standard reference that matches the requested cadence
   - `references/impact-actions-standard.md` before Impact production pulls or Impact gap analysis
   - Built-in web search for data plan research when current public context is needed
 - INPUT: Various user's natural language affiliate data / business questions or existing report.
@@ -46,9 +46,9 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 0a. For L2/L3, the first user-facing todo after reading the skill must be a blocking-scope gate, not source exploration. Do not create a plan where "explore existing report artifacts/data sources" appears before "confirm missing production scope" when the request lacks a required scope field. The blocking-scope gate checks only the user's request, current Asia/Shanghai date, and already named artifacts.
 
-0b. For L2/L3, Codex App Server `tool/requestUserInput` is a required capability whenever the blocking-scope gate needs a user choice. In model-facing tools this may appear as `request_user_input`; read `references/codex-question-tool.md` before applying fallback behavior. Verify that the capability is exposed and callable before presenting the choice. If it is not exposed, do not invent an `openai.yaml` dependency, emulate the tool with Markdown, or accept a user-approved workaround. Run the batch Tool Capability Inventory in 0c, then stop and tell the user that the runtime did not expose the required Question Tool. Do not continue with source exploration, production pulls, or report generation until the required Question Tool is actually available.
+0b. For L2/L3, Codex App Server `tool/requestUserInput` is a required capability whenever the blocking-scope gate needs a user choice. In model-facing tools this may appear as `request_user_input`; read `references/codex-question-tool.md` and `references/tool-capability-standard.md` before applying the gate. Verify that the capability is exposed and callable before presenting the choice. If it is not exposed, do not invent an `openai.yaml` dependency, emulate the tool with Markdown, or accept a user-approved workaround. Run the batch Tool Capability Inventory in 0c, then stop and tell the user that the runtime did not expose the required Question Tool. Do not continue with source exploration, production pulls, or report generation until the required Question Tool is actually available.
 
-0c. Tool Capability Inventory is a read-only capability check, not source exploration and not production work. For L2/L3, run it as a batch whenever any required capability may be missing, including when `request_user_input` is missing before scope confirmation. Do not fail fast on the first missing tool. Check every tool that is required or conditionally required by the apparent request and report one matrix with:
+0c. Tool Capability Inventory is a read-only capability check, not source exploration and not production work. For L2/L3, read `references/tool-capability-standard.md` and use its canonical registry, statuses, repair policy, and matrix schema. Run the inventory as a batch whenever any required capability may be missing, including when `request_user_input` is missing before scope confirmation. Do not fail fast on the first missing tool. Check every tool that is required or conditionally required by the apparent request and report one matrix with:
    - capability name
    - required / conditional / optional
    - why it is needed
@@ -57,7 +57,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - repair attempts, when the runtime provides an official repair path
    - blocking impact and next step
 
-   For a production affiliate report, the default inventory includes `tool/requestUserInput` / `request_user_input`, `$requirement-checker`, `$google-analytics`, `$mcp-impact-affiliate-orders`, `$mcp-commission-junction-affiliate-orders`, `$mcp-tradedoubler-affiliate-orders`, Google Sheets / `google-drive:google-sheets` or `Spreadsheets`, `$anker-brand-html-generation`, `browser:browser`, and any publish/deployment tool only if the user asks to publish. All required capabilities must be ready before the run can proceed. If one or more required capabilities remain unavailable, stop after reporting the full matrix instead of reporting only the first failure. Do not downgrade a required capability to optional, substitute another tool, use manual estimates, use Markdown as a tool replacement, or proceed based on user approval of a workaround.
+   For a production affiliate report, the default inventory includes the canonical capabilities in `references/tool-capability-standard.md`: `tool/requestUserInput` / `request_user_input`, `$requirement-checker`, `$google-analytics`, `$mcp-impact-affiliate-orders`, `$mcp-commission-junction-affiliate-orders`, `$mcp-tradedoubler-affiliate-orders`, Google Sheets / `google-drive:google-sheets`, `Spreadsheets`, `$anker-brand-html-generation`, `browser:browser`, and any publish/deployment tool only if the user asks to publish. All required capabilities must be ready before the run can proceed. If one or more required capabilities remain unavailable, stop after reporting the full matrix instead of reporting only the first failure. Do not downgrade a required capability to optional, substitute another tool, use manual estimates, use Markdown as a tool replacement, or proceed based on user approval of a workaround.
 
 1. Capture current time in Asia/Shanghai before resolving relative dates:
 
@@ -87,14 +87,14 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 7. Ask in business language and keep the interaction small. When a user-facing choice is needed for L2/L3, use Codex App Server `tool/requestUserInput` / `request_user_input`; do not emulate it with a Markdown question card. Present up to three short questions when using the tool, because the official app-server API is designed for 1-3 short questions. Explain the reason/impact for each, and make the recommended option `A` or clearly labeled `(Recommended)`. For L0/L1 only, a compact Markdown question card is acceptable when the formal Question Tool is unavailable and the answer is not production-blocking.
 
-8. After the blocking-scope gate passes, do source exploration before asking about non-blocking fields, filters, or metrics. For L1, do only the source checks needed for the requested answer. The exploration worker, either subagent or main-agent fallback, should verify the relevant source contract or existing artifact first:
+8. After the blocking-scope gate passes, do source exploration before asking about non-blocking fields, filters, or metrics. For L1, do only the source checks needed for the requested answer. The exploration worker, either subagent or main-agent execution path, should verify the relevant source contract or existing artifact first:
    - GA4: property, timezone, currency, market boundary, dimensions, metrics, transaction fields, and filters.
    - Impact: read `references/impact-actions-standard.md`; verify advertiser account, `Actions` date semantics, action ID, `EventDate`, country field, amount, payout, status, and pagination behavior.
    - CJ / TradeDoubler: read `references/platform-context.md`; verify advertiser/account configuration, launch or active-program context, date lenses, status fields, order ID, amount, commission, and zero-row caveats.
    - Google Sheets / local files: target, publisher, CRM, and mapping source availability.
    - Existing workspace: prior report caveats, run manifests, report bundles, and reusable scripts.
 
-9. Tool Availability Preflight is required for L2/L3 before production pulls or report generation. It must be batch-oriented, not fail-fast. Declare the required tools for the scoped run, then verify each one is callable and authorized:
+9. Tool Availability Preflight is required for L2/L3 before production pulls or report generation. It must use the canonical registry in `references/tool-capability-standard.md`, and it must be batch-oriented, not fail-fast. Declare the required tools for the scoped run, then verify each one is callable and authorized:
    - Codex App Server `tool/requestUserInput` / `request_user_input` when user clarification or approval is required
    - GA4 / `$google-analytics`
    - Impact / `$mcp-impact-affiliate-orders`
@@ -125,7 +125,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - `input_sources`
    - `skipped_reasons`
 
-   `tool_availability` should record each required tool, status, account/property checked, discovery/loading method, repair attempts, final state, and whether the run is blocked.
+   `tool_availability` should follow `references/tool-capability-standard.md`: record each required or conditional capability, canonical name, status, account/property checked, discovery/loading method, repair attempts, final state, `proceed_allowed`, and whether the run is blocked.
 
 11. For L3, after user clarification and before production pulls, run `$requirement-checker` again as an acceptance gate. For L2, run the final gate when the analysis will drive business decisions or when ambiguity remains. Confirm that the scoped requirement has enough detail for data collection, analysis, validation, and report generation. Record unresolved items as assumptions or blockers.
 
@@ -170,6 +170,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 Use these capabilities as tools under this skill:
 
+- Use `references/tool-capability-standard.md` as the canonical tool registry for L2/L3 plans, inventories, manifests, and QA. Do not invent ad hoc aliases or treat a tool as ready just because a related skill name appears in metadata.
 - `$requirement-checker` for requirement completeness checks, hidden requirement inference, and acceptance review.
 - Codex App Server `tool/requestUserInput`, surfaced as `request_user_input` in supported runtimes, for structured user choices, blocking-scope gates, and L2/L3 production approvals.
 - `$google-analytics` for GA4 property discovery, property context, dimensions, metrics, filters, transaction detail, `transactionId`, source / medium / campaign, and report pulls.

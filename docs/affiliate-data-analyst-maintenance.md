@@ -50,6 +50,8 @@ git push origin main
 
 ## Skill 修改检查表
 
+官方依据：这个 skill 的结构和维护方式参考 OpenAI Codex Agent Skills 文档；`requestUserInput` 参考 Codex App Server 文档；MCP 工具暴露和 required 机制参考 Codex config reference。当前项目的 Tool Capability Inventory 是基于这些官方机制制定的项目级治理标准，不是 OpenAI 官方内置的 affiliate 专用模板。
+
 修改前先判断任务层级：
 
 - L0：快速解释、只读查看、方向判断。
@@ -62,9 +64,10 @@ git push origin main
 - L2/L3 的第一个用户侧 todo 应该是 blocking-scope gate，而不是 source exploration。
 - 生产月报、周报、日报如果缺时间范围，必须先用绝对日期向用户确认，不能用旧目录或旧脚本自动决定范围。
 - L2/L3 需要用户选择时，Codex App Server `tool/requestUserInput` / `request_user_input` 必须作为 required capability 接受可用性检查；未暴露时停止，不能降级成 Markdown 问题，用户也不能批准 workaround 继续跑，也不要在 `agents/openai.yaml` 里伪造 unsupported dependency schema。
-- 工具检查必须一次性产出完整 Tool Capability Inventory；不能发现第一个缺失工具就 fail-fast。即使 Question Tool 未暴露，也要把 GA4、Impact、CJ、TradeDoubler、Sheets、HTML generation、Browser 等能力一起排查完再停。
+- 工具检查必须使用 `references/tool-capability-standard.md` 里的 canonical registry，一次性产出完整 Tool Capability Inventory；不能发现第一个缺失工具就 fail-fast。即使 Question Tool 未暴露，也要把 GA4、Impact、CJ、TradeDoubler、Sheets、HTML generation、Browser 等能力一起排查完再停。
 - 生产任务开始前必须做 batch-oriented Tool Availability Preflight。
 - 必需工具不可用时，最多尝试修复原工具 3 次；仍不可用就停止并告知用户。不能使用替代工具、手工估算、Markdown、旧产物或用户口头批准作为 workaround。
+- 新增、删除或改名任何工具/平台能力时，先更新 `references/tool-capability-standard.md`，再更新 `SKILL.md` 的最小流程引用和维护指南。
 - 不能用手工估算、替代工具或弱证据绕过必需 source tool。
 - L2/L3 要使用 `requirement-checker` 做需求覆盖核验。
 - `browser:browser` 是生产 HTML QA 工具。
@@ -76,6 +79,7 @@ git push origin main
 平台规则应该放在 references 里，不要散落在主流程里：
 
 - `references/platform-context.md`：平台上线时间、0 行数据解释、平台 caveat。
+- `references/tool-capability-standard.md`：所有工具 canonical name、required/conditional 规则、检查矩阵、修复尝试和停止规则。
 - `references/codex-question-tool.md`：Question Tool 的官方能力边界和停止规则。
 - `references/impact-actions-standard.md`：Impact Actions 拉数和 reconciliation 规则。
 - `references/measurement-contract.md`：指标定义和对账口径。
@@ -83,7 +87,7 @@ git push origin main
 - `references/weekly-report-standard.md`：周报周期的输出标准。
 - `references/goal-pacing.md`：目标和 pacing 逻辑。
 
-CJ、Impact、TradeDoubler、GA4 或 Google Sheets 的行为如果变化，优先更新对应 reference。只有当主流程必须强制执行某条规则时，才把最小必要规则写进 `SKILL.md`。
+CJ、Impact、TradeDoubler、GA4、Google Sheets、Browser、Question Tool 或 HTML generation 的行为如果变化，优先更新对应 reference，尤其是 `tool-capability-standard.md`。只有当主流程必须强制执行某条规则时，才把最小必要规则写进 `SKILL.md`。
 
 ## Runtime 维护
 
