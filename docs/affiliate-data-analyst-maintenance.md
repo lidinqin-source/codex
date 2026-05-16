@@ -62,6 +62,7 @@ git push origin main
 如果是 L2/L3 修改，要确认这些规则没有被破坏：
 
 - L2/L3 的第一个用户侧 todo 应该是 blocking-scope gate，而不是 source exploration。
+- L2/L3 生产请求开场优先引导用户使用 `/plan`。如果当前 mode 没暴露 `request_user_input`，先提示用户切换 `/plan` 或用 `/plan <原请求>` 重跑；不要继续做 source exploration。
 - 生产月报、周报、日报如果缺时间范围，必须先用绝对日期向用户确认，不能用旧目录或旧脚本自动决定范围。
 - L2/L3 需要用户选择时，Codex App Server `tool/requestUserInput` / `request_user_input` 必须作为 required capability 接受可用性检查；未暴露时停止，不能降级成 Markdown 问题，用户也不能批准 workaround 继续跑，也不要在 `agents/openai.yaml` 里伪造 unsupported dependency schema。
 - 工具检查必须使用 `references/tool-capability-standard.md` 里的 canonical registry，一次性产出完整 Tool Capability Inventory；不能发现第一个缺失工具就 fail-fast。即使 Question Tool 未暴露，也要把 GA4、Impact、CJ、TradeDoubler、Sheets、HTML generation、Browser 等能力一起排查完再停。
@@ -73,6 +74,8 @@ git push origin main
 - `browser:browser` 是生产 HTML QA 工具；实际调用面是 Browser skill 通过 `node_repl` 的 `js` 工具加载 `browser-client.mjs`，不要幻想有一个直接的 browser open 工具。
 - Playwright 可以辅助调试，但不是 L3 生产 QA 的 fallback。
 - `report_bundle.json` 命名规则保持统一：`report_title`、`report`、`report.source_files`。
+
+Hook 可以作为第二层入口门禁：用受信任的 `UserPromptSubmit` hook 识别 affiliate L2/L3 生产提示，并在 `permission_mode` 不是 `plan` 时阻断，提示用户改用 `/plan`。但 hook 不能自动切换 mode，也不能强制暴露 `request_user_input`，所以它只能防误启动，不能替代 Question Tool。
 
 ## 平台上下文维护
 

@@ -9,6 +9,8 @@ Official Codex references used:
 - Agent Skills package reusable workflows as `SKILL.md` plus optional `references/`, `scripts/`, `assets/`, and `agents/openai.yaml`: https://developers.openai.com/codex/skills
 - `agents/openai.yaml` can configure UI metadata, invocation policy, and declared tool dependencies; do not invent unsupported schema: https://developers.openai.com/codex/skills
 - Codex App Server exposes `tool/requestUserInput` for 1-3 short user questions when the client/runtime supports it: https://developers.openai.com/codex/app-server#toolrequestuserinput
+- Codex slash commands include `/plan`, which switches the active conversation into plan mode: https://developers.openai.com/codex/cli/slash-commands
+- Codex hooks can run on `UserPromptSubmit`, receive `permission_mode`, add context, or block a prompt, but they do not switch the conversation mode or expose app-server tools: https://developers.openai.com/codex/hooks
 - Codex config can control MCP server startup and exposed tool allow/deny lists with fields such as `mcp_servers.<id>.required`, `enabled_tools`, and `disabled_tools`: https://developers.openai.com/codex/config-reference#configtoml
 
 Project policy added by this skill:
@@ -23,6 +25,23 @@ Project policy added by this skill:
 For L2/L3 affiliate production work, every required capability must be actually ready before production work starts. Do not use a workaround, substitute tool, stale artifact, manual estimate, Markdown question, or user approval to replace a required capability.
 
 Subagents are execution helpers. Source tools, validation skills, user-input tools, and QA tools are evidence capabilities. A missing subagent can change who executes the work; a missing required evidence capability blocks the run.
+
+## Mode Entry Gate
+
+For likely L2/L3 production prompts, prefer starting in Codex plan mode so `tool/requestUserInput` can be exposed by clients that gate it behind plan-oriented interaction.
+
+Opening behavior:
+
+- If `request_user_input` is already exposed, use it for the blocking-scope gate.
+- If the current mode is not plan mode and `request_user_input` is not exposed, first tell the user to rerun the production request through `/plan <same request>` or switch the current thread with `/plan`.
+- Then run the read-only Tool Capability Inventory if the task is already in progress or the user asked for a readiness audit.
+- Do not continue into source exploration, production pulls, report generation, or HTML QA while `tool/requestUserInput` remains required and unavailable.
+
+Hook policy:
+
+- A trusted `UserPromptSubmit` hook may detect likely affiliate L2/L3 production prompts and block with a message that tells the user to use `/plan`.
+- The hook is only an entry guard. It must not be described as fixing `request_user_input`, because hooks cannot switch modes or force app-server tool exposure.
+- Keep hook logic in `codex-infra` templates or a trusted repo `.codex/hooks.json`, not inside this skill folder.
 
 ## Two Gates
 
