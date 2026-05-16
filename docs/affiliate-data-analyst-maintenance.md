@@ -61,6 +61,7 @@ git push origin main
 
 - L2/L3 的第一个用户侧 todo 应该是 blocking-scope gate，而不是 source exploration。
 - 生产月报、周报、日报如果缺时间范围，必须先用绝对日期向用户确认，不能用旧目录或旧脚本自动决定范围。
+- L2/L3 需要用户选择时，Codex App Server `tool/requestUserInput` / `request_user_input` 必须作为 required capability 接受可用性检查；未暴露时停止，不能默认降级成 Markdown 问题，也不要在 `agents/openai.yaml` 里伪造 unsupported dependency schema。
 - 生产任务开始前必须做 Tool Availability Preflight。
 - 必需工具不可用时，最多尝试修复 3 次；仍不可用就停止并告知用户。
 - 不能用手工估算、替代工具或弱证据绕过必需 source tool。
@@ -74,6 +75,7 @@ git push origin main
 平台规则应该放在 references 里，不要散落在主流程里：
 
 - `references/platform-context.md`：平台上线时间、0 行数据解释、平台 caveat。
+- `references/codex-question-tool.md`：Question Tool 的官方能力边界和 fallback 规则。
 - `references/impact-actions-standard.md`：Impact Actions 拉数和 reconciliation 规则。
 - `references/measurement-contract.md`：指标定义和对账口径。
 - `references/reconciliation-and-artifacts.md`：产物要求和证据打包规则。

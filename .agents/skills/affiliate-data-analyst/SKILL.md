@@ -32,8 +32,9 @@ Tools are evidence requirements; subagents are execution helpers. Required evide
   - Do not ask a source-exploration subagent to infer or choose a missing production period, market, cadence, or output target. Those are blocking scope questions for the main agent to confirm with the user.
   - If subagents are unavailable or not allowed in the current runtime, the main agent must perform the same read-only exploration steps locally and record the fallback in `run_manifest.json`.
 - Tools Use:
+  - Codex App Server `tool/requestUserInput`, surfaced in some runtimes as `request_user_input`, for L2/L3 user-facing blocking-scope gates and required clarification choices
   - `$requirement-checker` as a conditional gate: optional for L0/L1, mandatory preflight for L2, and mandatory preflight plus final acceptance gate for L3
-  - `references/measurement-contract.md`, `references/reconciliation-and-artifacts.md`, `references/operating-review.md`, `references/platform-context.md`, and the report-standard reference that matches the requested cadence
+  - `references/codex-question-tool.md`, `references/measurement-contract.md`, `references/reconciliation-and-artifacts.md`, `references/operating-review.md`, `references/platform-context.md`, and the report-standard reference that matches the requested cadence
   - `references/impact-actions-standard.md` before Impact production pulls or Impact gap analysis
   - Built-in web search for data plan research when current public context is needed
 - INPUT: Various user's natural language affiliate data / business questions or existing report.
@@ -44,6 +45,8 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 0. Apply the task tier first. Run `$requirement-checker` before asking the user for L2/L3 work, or for any L1 task whose scope is risky or ambiguous. Use it to identify explicit requirements, hidden requirements, missing scope, acceptance criteria, and likely blocking questions. If the tool/skill is unavailable, perform the same checklist manually and record the fallback.
 
 0a. For L2/L3, the first user-facing todo after reading the skill must be a blocking-scope gate, not source exploration. Do not create a plan where "explore existing report artifacts/data sources" appears before "confirm missing production scope" when the request lacks a required scope field. The blocking-scope gate checks only the user's request, current Asia/Shanghai date, and already named artifacts.
+
+0b. For L2/L3, Codex App Server `tool/requestUserInput` is a required capability whenever the blocking-scope gate needs a user choice. In model-facing tools this may appear as `request_user_input`; read `references/codex-question-tool.md` before applying fallback behavior. Verify that the capability is exposed and callable before presenting the choice. If it is not exposed, do not invent an `openai.yaml` dependency or emulate the tool with Markdown. Stop and tell the user that the runtime did not expose the required Question Tool; ask them to rerun in a Codex mode/client that exposes `tool/requestUserInput`, or to explicitly approve a non-tool fallback. Do not continue with source exploration, tool preflight, production pulls, or report generation until one of those happens.
 
 1. Capture current time in Asia/Shanghai before resolving relative dates:
 
@@ -71,7 +74,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
 6. Ask for missing context only when it blocks correctness. Otherwise infer from workspace artifacts, naming conventions, existing report caveats, and project references, then record every important inference. Blocking examples include missing time range for a production recurring report, unclear market boundary, missing target source for target-pacing claims, or ambiguous platform date lens. Existing report directories, old scripts, and prior manifests may suggest options, but they must not become default authorization for a new L3 production run.
 
-7. Ask in business language and keep the interaction small. When a user-facing choice is needed, present up to five questions at once, explain the reason/impact for each, and make the recommended option `A` or clearly labeled `(Recommended)`. Use a question tool when one is available; otherwise use a compact Markdown question card.
+7. Ask in business language and keep the interaction small. When a user-facing choice is needed for L2/L3, use Codex App Server `tool/requestUserInput` / `request_user_input`; do not emulate it with a Markdown question card unless the user explicitly approves that fallback. Present up to three short questions when using the tool, because the official app-server API is designed for 1-3 short questions. Explain the reason/impact for each, and make the recommended option `A` or clearly labeled `(Recommended)`. For L0/L1 only, a compact Markdown question card is acceptable when the formal Question Tool is unavailable and the answer is not production-blocking.
 
 8. After the blocking-scope gate passes, do source exploration before asking about non-blocking fields, filters, or metrics. For L1, do only the source checks needed for the requested answer. The exploration worker, either subagent or main-agent fallback, should verify the relevant source contract or existing artifact first:
    - GA4: property, timezone, currency, market boundary, dimensions, metrics, transaction fields, and filters.
@@ -81,6 +84,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - Existing workspace: prior report caveats, run manifests, report bundles, and reusable scripts.
 
 9. Tool Availability Preflight is required for L2/L3 before production pulls or report generation. Declare the required tools for the scoped run, then verify each one is callable and authorized:
+   - Codex App Server `tool/requestUserInput` / `request_user_input` when user clarification or approval is required
    - GA4 / `$google-analytics`
    - Impact / `$mcp-impact-affiliate-orders`
    - CJ / `$mcp-commission-junction-affiliate-orders`
@@ -156,6 +160,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 Use these capabilities as tools under this skill:
 
 - `$requirement-checker` for requirement completeness checks, hidden requirement inference, and acceptance review.
+- Codex App Server `tool/requestUserInput`, surfaced as `request_user_input` in supported runtimes, for structured user choices, blocking-scope gates, and L2/L3 production approvals.
 - `$google-analytics` for GA4 property discovery, property context, dimensions, metrics, filters, transaction detail, `transactionId`, source / medium / campaign, and report pulls.
 - `$mcp-impact-affiliate-orders` for Impact raw action / order evidence.
 - `$mcp-tradedoubler-affiliate-orders` for TradeDoubler raw transaction evidence.
