@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-affliate-mkt.local/schemas/run_manifest.schema.json",
+  "title": "Affiliate Report Run Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request_original",
+    "base_date",
+    "operator_timezone",
+    "run",
+    "scope",
+    "property",
+    "market_boundary",
+    "platforms",
+    "target",
+    "requested_outputs",
+    "old_report_exclusion",
+    "tool_availability",
+    "caveats"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "type": "string" },
+    "request_original": { "type": "string", "minLength": 1 },
+    "base_date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "operator_timezone": { "type": "string", "minLength": 1 },
+    "run": {
+      "type": "object",
+      "required": ["mode", "quiet", "fresh_pull", "debug_cache_allowed", "generator"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["production", "debug"] },
+        "quiet": { "type": "boolean" },
+        "fresh_pull": { "type": "boolean" },
+        "debug_cache_allowed": { "type": "boolean" },
+        "generator": { "type": "string", "minLength": 1 },
+        "max_stdout_lines": { "type": "integer", "minimum": 1 },
+        "summary_contract": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "brand",
+        "market",
+        "cadence",
+        "run_label",
+        "output_dir",
+        "current_range",
+        "comparison_range",
+        "ytd_range"
+      ],
+      "properties": {
+        "brand": { "type": "string", "minLength": 1 },
+        "market": { "type": "string", "minLength": 1 },
+        "cadence": { "type": "string", "minLength": 1 },
+        "run_label": { "type": "string", "minLength": 1 },
+        "output_dir": { "type": "string", "pattern": "^affiliate_reports/[^.].+" },
+        "current_range": { "$ref": "#/$defs/date_range" },
+        "comparison_range": { "$ref": "#/$defs/date_range" },
+        "ytd_range": { "$ref": "#/$defs/date_range" }
+      }
+    },
+    "property": {
+      "type": "object",
+      "required": ["id", "name", "timezone", "currency"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^(properties/)?\\d+$" },
+        "name": { "type": "string", "minLength": 1 },
+        "timezone": { "type": "string", "minLength": 1 },
+        "currency": { "type": "string", "minLength": 3 }
+      }
+    },
+    "market_boundary": {
+      "type": "object",
+      "required": ["source", "field", "allowed_values"],
+      "properties": {
+        "source": { "type": "string", "enum": ["GA4"] },
+        "field": { "type": "string", "minLength": 1 },
+        "allowed_values": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "platforms": {
+      "type": "object",
+      "required": ["impact", "cj", "post_period_refresh_end"],
+      "properties": {
+        "impact": {
+          "type": "object",
+          "required": ["campaign_id", "endpoint", "pull_ranges"],
+          "properties": {
+            "campaign_id": { "type": "string", "minLength": 1 },
+            "endpoint": { "type": "string", "minLength": 1 },
+            "pull_ranges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["start", "end", "purpose"],
+                "properties": {
+                  "start": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                  "end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                  "purpose": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
+        "cj": {
+          "type": "object",
+          "required": ["advertiser_ids", "event_date_lens", "posting_date_lens"],
+          "properties": {
+            "advertiser_ids": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "minItems": 1
+            },
+            "event_date_lens": { "$ref": "#/$defs/date_lens" },
+            "posting_date_lens": { "$ref": "#/$defs/date_lens" }
+          }
+        },
+        "post_period_refresh_end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "tradedoubler": { "type": "object" }
+      }
+    },
+    "coupon_lookup": { "type": "object" },
+    "target": {
+      "type": "object",
+      "required": ["source_type", "method", "annual_affiliate_gmv_goal", "denominator_net_sales", "monthly_rows"],
+      "properties": {
+        "source_type": { "type": "string", "minLength": 1 },
+        "source_url": { "type": "string" },
+        "spreadsheet_id": { "type": "string" },
+        "tab": { "type": "string" },
+        "gid": { "type": "integer" },
+        "range": { "type": "string" },
+        "timezone": { "type": "string" },
+        "source_caveat": { "type": "string" },
+        "method": { "type": "string", "minLength": 1 },
+        "annual_affiliate_gmv_goal": { "type": "number", "minimum": 0 },
+        "denominator_net_sales": { "type": "number", "minimum": 1 },
+        "rounding_caveat": { "type": "string" },
+        "monthly_rows": {
+          "type": "array",
+          "items": { "type": "object" },
+          "minItems": 12
+        }
+      }
+    },
+    "requested_outputs": {
+      "type": "object",
+      "required": ["audit_csv", "report_bundle", "insights", "actions", "html", "markdown", "validation", "browser_qa", "run_summary"],
+      "properties": {
+        "audit_csv": { "type": "boolean" },
+        "report_bundle": { "type": "boolean" },
+        "insights": { "type": "boolean" },
+        "actions": { "type": "boolean" },
+        "html": { "type": "boolean" },
+        "markdown": { "type": "boolean" },
+        "validation": { "type": "boolean" },
+        "browser_qa": { "type": "boolean" },
+        "run_summary": { "type": "boolean" }
+      }
+    },
+    "old_report_exclusion": {
+      "type": "object",
+      "required": ["forbid_prior_report_inputs", "allowed_reference_paths"],
+      "properties": {
+        "forbid_prior_report_inputs": { "type": "boolean" },
+        "allowed_reference_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "tool_availability": {
+      "type": "object",
+      "required": ["proceed_allowed", "matrix"],
+      "properties": {
+        "proceed_allowed": { "type": "boolean" },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["capability", "canonical_name", "need_level", "status"],
+            "properties": {
+              "capability": { "type": "string", "minLength": 1 },
+              "canonical_name": { "type": "string", "minLength": 1 },
+              "need_level": { "type": "string", "enum": ["required", "conditional", "optional", "not_applicable"] },
+              "status": { "type": "string", "enum": ["available", "not_exposed", "unauthorized", "setup_error", "not_applicable", "unknown"] },
+              "why_needed": { "type": "string" },
+              "check_method": { "type": "string" },
+              "blocking_impact": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "date_range": {
+      "type": "object",
+      "required": ["start", "end", "label"],
+      "properties": {
+        "start": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "date_lens": {
+      "type": "object",
+      "required": ["since", "before"],
+      "properties": {
+        "since": { "type": "string", "minLength": 1 },
+        "before": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

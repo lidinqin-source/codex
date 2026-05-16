@@ -12,6 +12,15 @@
 - `.agents/skills/affiliate-data-analyst/agents/`
 - `.agents/skills/affiliate-data-analyst/assets/`
 - `.agents/skills/affiliate-data-analyst/references/`
+- `schemas/run_manifest.schema.json`
+- `schemas/report_bundle.schema.json`
+- `schemas/run_summary.schema.json`
+- `scripts/run_affiliate_report.py`
+- `scripts/validate_affiliate_report.py`
+- `scripts/browser_qa_report.mjs`
+- `scripts/lib/affiliate_report/`
+- `affiliate_reports/templates/`
+- `docs/affiliate_report_pipeline.md`
 - `requirements.txt`
 - `.gitignore`
 - `docs/`
@@ -74,6 +83,7 @@ git push origin main
 - `browser:browser` 是生产 HTML QA 工具；实际调用面是 Browser skill 通过 `node_repl` 的 `js` 工具加载 `browser-client.mjs`，不要幻想有一个直接的 browser open 工具。
 - Playwright 可以辅助调试，但不是 L3 生产 QA 的 fallback。
 - `report_bundle.json` 命名规则保持统一：`report_title`、`report`、`report.source_files`。
+- L3 生产报告默认走 manifest-driven runner：`make affiliate-report MANIFEST=...`。模型最终只读 `run_summary.json`、`validation_summary.json`、`browser_qa_summary.json`，失败时先读 `error_summary.json`。
 
 Hook 可以作为第二层入口门禁：用受信任的 `UserPromptSubmit` hook 识别 affiliate L2/L3 生产提示，并在 `permission_mode` 不是 `plan` 时阻断，提示用户改用 `/plan`。但 hook 不能自动切换 mode，也不能强制暴露 `request_user_input`，所以它只能防误启动，不能替代 Question Tool。
 

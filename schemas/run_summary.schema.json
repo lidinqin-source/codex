@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-affliate-mkt.local/schemas/run_summary.schema.json",
+  "title": "Affiliate Report Run Summary",
+  "type": "object",
+  "required": ["status", "scope", "headline_metrics", "reconciliation", "validation", "browser_qa", "files"],
+  "properties": {
+    "status": { "type": "string", "enum": ["passed", "failed"] },
+    "scope": {
+      "type": "object",
+      "required": ["brand", "market", "current_range", "comparison_range"],
+      "properties": {
+        "brand": { "type": "string", "minLength": 1 },
+        "market": { "type": "string", "minLength": 1 },
+        "current_range": { "type": "string", "minLength": 1 },
+        "comparison_range": { "type": "string", "minLength": 1 }
+      }
+    },
+    "headline_metrics": {
+      "type": "object",
+      "required": ["affiliate_revenue", "affiliate_orders", "mtd_target", "mtd_pacing", "ytd_target", "ytd_pacing"],
+      "properties": {
+        "affiliate_revenue": { "type": "number" },
+        "affiliate_orders": { "type": "integer", "minimum": 0 },
+        "mtd_target": { "type": "number" },
+        "mtd_pacing": { "type": "number" },
+        "ytd_target": { "type": "number" },
+        "ytd_pacing": { "type": "number" }
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "required": ["matched", "ga4_only", "platform_only"],
+      "properties": {
+        "matched": { "type": "integer", "minimum": 0 },
+        "ga4_only": { "type": "integer", "minimum": 0 },
+        "platform_only": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": ["status", "failed_checks"],
+      "properties": {
+        "status": { "type": "string" },
+        "failed_checks": { "type": "array" }
+      }
+    },
+    "browser_qa": {
+      "type": "object",
+      "required": ["status", "desktop_console_errors", "mobile_console_errors", "horizontal_overflow"],
+      "properties": {
+        "status": { "type": "string" },
+        "desktop_console_errors": { "type": "integer", "minimum": 0 },
+        "mobile_console_errors": { "type": "integer", "minimum": 0 },
+        "horizontal_overflow": { "type": "boolean" }
+      }
+    },
+    "files": { "type": "object" }
+  }
+}

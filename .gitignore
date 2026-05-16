@@ -8,21 +8,32 @@
 .env.*
 .venv/
 venv/
+node_modules/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 *.py[cod]
 
-# Generated report artifacts stay local by default.
-# Promote a specific report artifact with `git add -f <path>` only after review.
-affiliate_reports/
+# Generated report artifacts stay local by default. Manifest templates are tracked.
+affiliate_reports/*
+!affiliate_reports/templates/
+!affiliate_reports/templates/**
 reports/
 output/
 
 # One-off production scripts often contain hardcoded date/market paths.
-# Reusable scripts should live under .agents/skills/<skill-name>/scripts/.
-scripts/
+# The manifest-driven affiliate pipeline scripts below are reusable and tracked.
+scripts/*
+!scripts/run_affiliate_report.py
+!scripts/validate_affiliate_report.py
+!scripts/browser_qa_report.mjs
+!scripts/lib/
+scripts/lib/*
+!scripts/lib/affiliate_report/
+!scripts/lib/affiliate_report/**
+scripts/lib/affiliate_report/__pycache__/
+scripts/lib/affiliate_report/**/*.pyc
 
 # Historical standalone reference copied into the skill package.
 goal-pacing.md

@@ -1,0 +1,377 @@
+{
+  "$schema": "../../schemas/run_manifest.schema.json",
+  "schema_version": "1.0.0",
+  "request_original": "eufyMake US 2026-05-01 to 2026-05-15 monthly MTD affiliate production report. Target pacing must use the Goal Google Sheet US tab, not previous report outputs or manual target artifacts.",
+  "base_date": "2026-05-17",
+  "operator_timezone": "Asia/Shanghai",
+  "created_at": "2026-05-17T00:00:00+08:00",
+  "run": {
+    "mode": "production",
+    "quiet": true,
+    "fresh_pull": true,
+    "debug_cache_allowed": false,
+    "generator": "scripts/generate_us_monthly_report.py",
+    "max_stdout_lines": 100,
+    "summary_contract": "schemas/run_summary.schema.json"
+  },
+  "scope": {
+    "brand": "eufyMake",
+    "market": "US",
+    "cadence": "monthly_mtd",
+    "run_label": "monthly-mtd-goal-sheet-production",
+    "output_dir": "affiliate_reports/eufymake-US-2026-05-01_to_2026-05-15-monthly-mtd-goal-sheet-production",
+    "current_range": {
+      "start": "2026-05-01",
+      "end": "2026-05-15",
+      "label": "2026-05-01 to 2026-05-15"
+    },
+    "comparison_range": {
+      "start": "2026-04-01",
+      "end": "2026-04-15",
+      "label": "2026-04-01 to 2026-04-15"
+    },
+    "ytd_range": {
+      "start": "2026-01-01",
+      "end": "2026-05-15",
+      "label": "2026-01-01 to 2026-05-15"
+    }
+  },
+  "property": {
+    "id": "properties/302635205",
+    "name": "P01 EufyMake All Sites | GA4",
+    "timezone": "Europe/London",
+    "currency": "USD"
+  },
+  "market_boundary": {
+    "source": "GA4",
+    "field": "countryId",
+    "allowed_values": [
+      "US"
+    ],
+    "note": "US market boundary is GA4 countryId=US. Platform customer country and tracker market are QA fields, not the GA4 market boundary."
+  },
+  "currency": "USD",
+  "date_lenses": {
+    "current": {
+      "start": "2026-05-01",
+      "end": "2026-05-15",
+      "label": "2026-05-01 to 2026-05-15"
+    },
+    "previous": {
+      "start": "2026-04-01",
+      "end": "2026-04-15",
+      "label": "2026-04-01 to 2026-04-15"
+    },
+    "ytd": {
+      "start": "2026-01-01",
+      "end": "2026-05-15",
+      "label": "2026-01-01 to 2026-05-15"
+    },
+    "impact_business_lens": "EventDate filtered locally after broad Actions pull.",
+    "cj_business_lenses": [
+      "event_date",
+      "posting_date"
+    ],
+    "freshness_note": "2026-05-16 is excluded because it was not a complete GA4 property-local day when the scope was confirmed; target pacing uses Goal Google Sheet US tab.",
+    "impact_pull_ranges": [
+      [
+        "2026-05-01",
+        "2026-05-17"
+      ]
+    ],
+    "cj_event_lens": {
+      "since": "2026-05-01",
+      "before": "2026-05-16"
+    },
+    "cj_posting_lens": {
+      "since": "2026-05-01",
+      "before": "2026-05-18"
+    }
+  },
+  "platforms": {
+    "impact": {
+      "campaign_id": "18025",
+      "endpoint": "Actions",
+      "pull_ranges": [
+        {
+          "start": "2026-05-01",
+          "end": "2026-05-17",
+          "purpose": "Broad pull with post-period refresh window; report scope filters by EventDate 2026-05-01 to 2026-05-15."
+        }
+      ]
+    },
+    "cj": {
+      "advertiser_ids": [
+        "7858463"
+      ],
+      "event_date_lens": {
+        "since": "2026-05-01T00:00:00Z",
+        "before": "2026-05-16T00:00:00Z"
+      },
+      "posting_date_lens": {
+        "since": "2026-05-01T00:00:00Z",
+        "before": "2026-05-18T00:00:00Z"
+      }
+    },
+    "post_period_refresh_end": "2026-05-17",
+    "tradedoubler": {
+      "status": "not_applicable",
+      "reason": "TradeDoubler is not a US primary affiliate platform for this report."
+    }
+  },
+  "coupon_lookup": {
+    "spreadsheet_id": "1sVaaP7pmp7XiQfWaCiURGf0QZR39o9kOc2ERS7zBwFs",
+    "tab": "折扣券放到第一栏",
+    "match_rule": "Exact normalized orderCoupon to coupon code."
+  },
+  "target": {
+    "source_type": "google_sheet",
+    "source_url": "https://docs.google.com/spreadsheets/d/19urEQUXab48QzYnj_rFe438sL7ax0ZB5trhcK_bF1rQ/edit?gid=993040432#gid=993040432",
+    "spreadsheet_id": "19urEQUXab48QzYnj_rFe438sL7ax0ZB5trhcK_bF1rQ",
+    "tab": "US",
+    "gid": 993040432,
+    "range": "A1:Z30",
+    "timezone": "America/Los_Angeles",
+    "source_caveat": "Official ongoing eufyMake US target source per user instruction; production runs must not fall back to old reports or manual target artifacts.",
+    "method": "Goal!US affiliate_revenue_target as monthly affiliate revenue target; MTD target prorated by elapsed days in month.",
+    "annual_affiliate_gmv_goal": 11766720,
+    "denominator_net_sales": 69216000,
+    "rounding_caveat": "Goal!US affiliate_revenue_target is used directly for pacing; net_sales is preserved as planning context, not as the pacing formula denominator.",
+    "monthly_rows": [
+      {
+        "period_type": "month",
+        "period": "1月",
+        "month_number": 1,
+        "region": "US",
+        "sessions": 290170,
+        "net_sales": 442491,
+        "orders": 379,
+        "affiliate_session_target": 49329,
+        "affiliate_revenue_target": 75223,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "2月",
+        "month_number": 2,
+        "region": "US",
+        "sessions": 233799,
+        "net_sales": 419870,
+        "orders": 360,
+        "affiliate_session_target": 39746,
+        "affiliate_revenue_target": 71378,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "3月",
+        "month_number": 3,
+        "region": "US",
+        "sessions": 275928,
+        "net_sales": 452402,
+        "orders": 388,
+        "affiliate_session_target": 46908,
+        "affiliate_revenue_target": 76908,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "4月",
+        "month_number": 4,
+        "region": "US",
+        "sessions": 429615,
+        "net_sales": 915188,
+        "orders": 784,
+        "affiliate_session_target": 3035,
+        "affiliate_revenue_target": 155582,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "5月",
+        "month_number": 5,
+        "region": "US",
+        "sessions": 812307,
+        "net_sales": 5107795,
+        "orders": 4378,
+        "affiliate_session_target": 138092,
+        "affiliate_revenue_target": 868325,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "6月",
+        "month_number": 6,
+        "region": "US",
+        "sessions": 394579,
+        "net_sales": 3729552,
+        "orders": 3197,
+        "affiliate_session_target": 67078,
+        "affiliate_revenue_target": 634024,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "7月",
+        "month_number": 7,
+        "region": "US",
+        "sessions": 633990,
+        "net_sales": 3729566,
+        "orders": 3197,
+        "affiliate_session_target": 107778,
+        "affiliate_revenue_target": 634026,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "8月",
+        "month_number": 8,
+        "region": "US",
+        "sessions": 729825,
+        "net_sales": 2454261,
+        "orders": 2104,
+        "affiliate_session_target": 124070,
+        "affiliate_revenue_target": 417224,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "9月",
+        "month_number": 9,
+        "region": "US",
+        "sessions": 828168,
+        "net_sales": 9871720,
+        "orders": 8461,
+        "affiliate_session_target": 140789,
+        "affiliate_revenue_target": 1678192,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "10月",
+        "month_number": 10,
+        "region": "US",
+        "sessions": 1038453,
+        "net_sales": 10808909,
+        "orders": 9265,
+        "affiliate_session_target": 176537,
+        "affiliate_revenue_target": 1837515,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "11月",
+        "month_number": 11,
+        "region": "US",
+        "sessions": 1574971,
+        "net_sales": 17380276,
+        "orders": 14897,
+        "affiliate_session_target": 267745,
+        "affiliate_revenue_target": 2954647,
+        "source_type": "google_sheet"
+      },
+      {
+        "period_type": "month",
+        "period": "12月",
+        "month_number": 12,
+        "region": "US",
+        "sessions": 1473559,
+        "net_sales": 13903972,
+        "orders": 11918,
+        "affiliate_session_target": 250505,
+        "affiliate_revenue_target": 2363675,
+        "source_type": "google_sheet"
+      }
+    ]
+  },
+  "requested_outputs": {
+    "audit_csv": true,
+    "report_bundle": true,
+    "insights": true,
+    "actions": true,
+    "html": true,
+    "markdown": true,
+    "validation": true,
+    "browser_qa": true,
+    "run_summary": true
+  },
+  "old_report_exclusion": {
+    "forbid_prior_report_inputs": true,
+    "allowed_reference_paths": [],
+    "note": "Prior affiliate_reports/eufymake-* outputs may be used only for manual debugging after a failure, not as source inputs for this run; target pacing must use Goal Google Sheet US tab."
+  },
+  "tool_availability": {
+    "proceed_allowed": true,
+    "matrix": [
+      {
+        "capability": "GA4 evidence",
+        "canonical_name": "$google-analytics / GA4 Data API",
+        "need_level": "required",
+        "status": "available",
+        "why_needed": "GA4 market, affiliate session, transactionId, source, campaign, coupon, and revenue facts.",
+        "check_method": "Project Python runtime uses google-analytics-data and configured Application Default Credentials.",
+        "blocking_impact": "Required for revenue/order truth."
+      },
+      {
+        "capability": "Impact evidence",
+        "canonical_name": "$mcp-impact-affiliate-orders / Impact Actions",
+        "need_level": "required",
+        "status": "available",
+        "why_needed": "Platform-side US order evidence and GA4-vs-platform reconciliation.",
+        "check_method": "Production generator reads the configured Impact Actions credential path and records pagination metadata.",
+        "blocking_impact": "Required for platform reconciliation."
+      },
+      {
+        "capability": "CJ evidence",
+        "canonical_name": "$mcp-commission-junction-affiliate-orders / CJ Commission Detail",
+        "need_level": "required",
+        "status": "available",
+        "why_needed": "CJ event/posting lenses and publisher/order reconciliation.",
+        "check_method": "Production generator reads the configured local CJ token path and records event/posting pull logs.",
+        "blocking_impact": "Required for US CJ launch/ramp evidence."
+      },
+      {
+        "capability": "Google Sheets sources",
+        "canonical_name": "google-drive:google-sheets / Google Sheets API",
+        "need_level": "required",
+        "status": "available",
+        "why_needed": "Coupon lookup and Goal!US target pacing source.",
+        "check_method": "Project Python runtime uses Google Sheets API readonly scope.",
+        "blocking_impact": "Required for coupon classification and target pacing."
+      },
+      {
+        "capability": "Local spreadsheet work",
+        "canonical_name": "Spreadsheets / csv module",
+        "need_level": "required",
+        "status": "available",
+        "why_needed": "Audit CSV generation and aggregation validation.",
+        "check_method": "Stdlib CSV and checked-in validation script.",
+        "blocking_impact": "Required for validation."
+      },
+      {
+        "capability": "Production HTML QA",
+        "canonical_name": "scripts/browser_qa_report.mjs / Playwright Chromium",
+        "need_level": "required",
+        "status": "available",
+        "why_needed": "Desktop/mobile render, console, overflow, table scroll, and KPI checks.",
+        "check_method": "Runner prepares Node runtime and invokes browser_qa_report.mjs.",
+        "blocking_impact": "Required before L3 report completion."
+      },
+      {
+        "capability": "TradeDoubler evidence",
+        "canonical_name": "$mcp-tradedoubler-affiliate-orders",
+        "need_level": "not_applicable",
+        "status": "not_applicable",
+        "why_needed": "Not used for US scope.",
+        "check_method": "Market/platform scope review.",
+        "blocking_impact": "None for US monthly MTD."
+      }
+    ]
+  },
+  "caveats": [
+    "GA4 countryId=US is the market boundary; platform customer country and tracker market are QA fields.",
+    "Production defaults to fresh pulls. Cache/debug reuse is disabled in this manifest.",
+    "Zero-row platform query results must be described as query results, not as business no-activity conclusions.",
+    "The final model-facing handoff is run_summary.json plus validation/browser QA summaries only."
+  ]
+}

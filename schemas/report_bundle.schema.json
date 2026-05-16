@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codex-affliate-mkt.local/schemas/report_bundle.schema.json",
+  "title": "Affiliate Report Bundle",
+  "type": "object",
+  "required": ["report_title", "scope", "property", "metrics", "reconciliation_summary", "target_summary", "report"],
+  "properties": {
+    "report_title": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string" },
+    "scope": {
+      "type": "object",
+      "required": ["brand", "market", "current_start", "current_end", "previous_start", "previous_end", "ytd_start", "ytd_end"],
+      "properties": {
+        "brand": { "type": "string", "minLength": 1 },
+        "market": { "type": "string", "minLength": 1 },
+        "current_start": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "current_end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "previous_start": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "previous_end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "ytd_start": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "ytd_end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      }
+    },
+    "property": { "type": "object" },
+    "metrics": {
+      "type": "object",
+      "required": ["affiliate_current"],
+      "properties": {
+        "affiliate_current": {
+          "type": "object",
+          "required": ["orders", "revenue"],
+          "properties": {
+            "orders": { "type": "integer", "minimum": 0 },
+            "revenue": { "type": "number" }
+          }
+        }
+      }
+    },
+    "reconciliation_summary": { "type": "object" },
+    "target_summary": { "type": "object" },
+    "report": {
+      "type": "object",
+      "required": ["source_files"],
+      "properties": {
+        "source_files": { "type": "object" }
+      }
+    }
+  }
+}

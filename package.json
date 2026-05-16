@@ -1,0 +1,11 @@
+{
+  "name": "codex-affliate-mkt-reporting",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "browser-qa": "node scripts/browser_qa_report.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
+  }
+}

@@ -17,7 +17,7 @@ Task tiers:
 - L0 quick answer / file lookup: answer from a named artifact, simple command, or existing report. `update_plan`, `$requirement-checker`, subagents, and manifests are usually unnecessary.
 - L1 single-source query / small edit: confirm the minimum scope, source lens, and output. Use tools required for the evidence source; usually skip `$requirement-checker` and subagents unless risk is high.
 - L2 multi-source analysis / reconciliation / attribution: use `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, and structured evidence notes. Use source-specific subagents when the runtime/user allows them; otherwise do the same exploration locally and record the execution path.
-- L3 production report / recurring report / leadership output: use the full workflow in this order: `update_plan`, `$requirement-checker` preflight, blocking-scope gate, source exploration, final requirement gate, production pulls, `run_manifest.json`, `report_bundle.json` or `report_meta.json`, audit files, report generation, and rendered QA.
+- L3 production report / recurring report / leadership output: use the manifest-driven production pipeline. The main agent scopes and validates `run_manifest.json`, then runs `make affiliate-report MANIFEST=...` or `python scripts/run_affiliate_report.py --manifest ... --quiet`. The runner performs production pulls, report generation, validation, browser QA, and writes `run_summary.json`; the final model-facing read should be `run_summary.json` plus compact validation/browser summaries only.
 
 Tools are evidence requirements; subagents are execution helpers. Required evidence must still be gathered through ready source tools even if subagents are unavailable. If a user or runtime policy makes a subagent mandatory for a run, include it in the Tool Capability Inventory as a required capability. If a tier rule is skipped, record a concise `skipped_reason` in the final answer for L0/L1 or in `run_manifest.json` for L2/L3.
 
@@ -107,7 +107,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 
    If one or more required tools are missing, unavailable, unauthorized, or return setup errors, do not use a workaround, substitute data source, manual estimate, Markdown replacement, or weakened evidence path. Check every required or conditional capability before stopping. Try to repair exact required capabilities up to three times when an official repair path exists, such as tool discovery/loading, account/property verification, auth/scope check, or retry through the official tool path. If any required capability still fails, stop before production work and tell the user all failed required capabilities, what was tried, and what residual work is blocked. User approval cannot override missing required tools for L2/L3 production work; the actual required capabilities must be ready.
 
-10. Create or update the requirement snapshot in `run_manifest.json` for L2/L3 production-grade runs. At minimum it should contain:
+10. Create or update the requirement snapshot in `run_manifest.json` for L2/L3 production-grade runs, then validate it against `schemas/run_manifest.schema.json` before any source pull. At minimum it should contain:
    - `request_original`
    - `base_date`
    - `operator_timezone`
@@ -124,10 +124,16 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
    - `requirement_checker`
    - `source_exploration`
    - `tool_availability`
+   - `old_report_exclusion`
+   - `requested_outputs`
+   - `output_dir`
+   - `caveats`
    - `input_sources`
    - `skipped_reasons`
 
    `tool_availability` should follow `references/tool-capability-standard.md`: record each required or conditional capability, canonical name, status, account/property checked, discovery/loading method, repair attempts, final state, `proceed_allowed`, and whether the run is blocked.
+
+   For L3, do not pull GA4/platform rows directly in the chat loop after the manifest is ready. Use the runner entrypoint so raw rows, large JSON, large CSVs, and long logs stay on disk.
 
 11. For L3, after user clarification and before production pulls, run `$requirement-checker` again as an acceptance gate. For L2, run the final gate when the analysis will drive business decisions or when ambiguity remains. Confirm that the scoped requirement has enough detail for data collection, analysis, validation, and report generation. Record unresolved items as assumptions or blockers.
 
@@ -140,6 +146,7 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 - INPUT: Scoped data pulls and artifact requirements.
 - OUTPUT: Required data for analysis.
 - Tools Use:
+  - `make affiliate-report MANIFEST=...` or `python scripts/run_affiliate_report.py --manifest ... --quiet` for L3 production runs
   - `$google-analytics`
   - `$mcp-impact-affiliate-orders`
   - `$mcp-tradedoubler-affiliate-orders`
@@ -163,7 +170,8 @@ Requirement clarification is a gate, not a casual preface. Use these rules befor
 - OUTPUT: Visually appealing report or presentation in HTML, and hosting on cloud on demand after asking the user.
 - Tools Use:
   - `$anker-brand-html-generation`
-  - `browser:browser` as the required L3 production HTML QA tool
+  - `scripts/browser_qa_report.mjs` through the production runner as the required L3 production HTML QA automation
+  - `browser:browser` for interactive preview/debug when needed after the automated QA summary points to a UI issue
   - `build-web-apps:frontend-testing-debugging` for debugging report UI before final L3 Browser QA; it does not replace `browser:browser` for production acceptance
   - `cloudflare:wrangler` or `cloudflare:cloudflare` only when the user asks to publish the report
 - Standalone eufyMake HTML reports should include the local favicon asset `assets/eufymake-favicon.png`; embed or copy it intentionally so browser QA does not request an implicit `/favicon.ico`.
@@ -182,7 +190,8 @@ Use these capabilities as tools under this skill:
 - `Spreadsheets` for target workbooks, publisher mappings, CSV / XLSX inspection, formulas, charts, and spreadsheet artifacts.
 - `google-drive:google-sheets` for connected Google Sheets lookup or edits when source data lives in Google Sheets.
 - `$anker-brand-html-generation` for ANKER / eufyMake branded self-contained HTML report output.
-- `browser:browser` for opening, previewing, screenshotting, and verifying local HTML reports through the official Browser skill bootstrap with `node_repl` `js`.
+- `scripts/browser_qa_report.mjs` for automated desktop/mobile local HTML QA, screenshots, console checks, horizontal-overflow checks, table internal-scroll checks, and KPI-vs-bundle checks.
+- `browser:browser` for opening, previewing, screenshotting, and debugging local HTML reports through the official Browser skill bootstrap when the automated QA summary needs visual investigation.
 - `build-web-apps:frontend-testing-debugging` for debugging local report UI, layout, console errors, and responsive rendering.
 - `cloudflare:wrangler` or `cloudflare:cloudflare` for cloud hosting / deployment only when the user asks to publish the report.
 - Built-in web search for external data plan research when current public context is needed.
@@ -223,6 +232,7 @@ Use one report root per production run:
 Recommended artifact locations:
 
 - Run manifest: `run_manifest.json`
+- Runner logs: `run_logs/*.log`
 - Raw inputs: `raw_inputs/`
 - Target files: `targets/`
 - GA4 transaction classification: `ga4_transaction_classification.csv`
@@ -235,6 +245,10 @@ Recommended artifact locations:
 - Final insight file: `insights.json`
 - Action plan: `actions.csv` or `actions.json`
 - Report files: `report.md` and / or `report.html`
+- Validation summary: `validation_summary.json`
+- Browser QA summary and screenshots: `browser_qa_summary.json`, `browser_qa_desktop.png`, `browser_qa_mobile.png`
+- Final model-facing summary: `run_summary.json`
+- Failure handoff: `error_summary.json`
 
 Rules:
 
@@ -249,6 +263,11 @@ Rules:
 
 Report production script architecture:
 
+- L3 production reports must use the unified entrypoint:
+  - `make affiliate-report MANIFEST=affiliate_reports/.../run_manifest.json`
+  - or `python scripts/run_affiliate_report.py --manifest affiliate_reports/.../run_manifest.json --quiet`
+- The runner owns manifest validation, runtime preparation, GA4/Impact/CJ/coupon/target pulls, audit CSV generation, report bundle generation, insight/action/report output, validation, browser QA, and final `run_summary.json`.
+- Runner stdout must stay compact. Long stdout/stderr goes to `run_logs/*.log`; source response metadata goes to `platform_refresh_status.csv`, `impact_pull_log.csv`, and `cj_pull_log.csv`.
 - Design production report scripts around cadence and market extensibility. Daily, weekly, monthly, and region-specific reports may need different data lenses, comparison windows, platform mixes, target rules, and report sections.
 - Prefer a shared production runner plus small cadence/market configuration layers when recurring scripts are added. Keep reusable logic in shared helpers and keep market/cadence differences explicit in configuration or thin wrappers.
 - A production script should accept or derive these fields from `run_manifest.json`: `brand`, `market`, `cadence`, `current_range`, `comparison_range`, `date_lenses`, `requested_outputs`, `required_tools`, and `run_label`.
@@ -290,15 +309,24 @@ Before reporting a production run as complete, verify and record:
 
 - `run_manifest.json` contains the scoped requirement snapshot and assumptions.
 - `report_bundle.json` or `report_meta.json` contains the final scope, date labels, source files, metric definitions, caveats, and evidence summaries.
+- `run_summary.json` exists and is the final handoff file for success/failure, headline metrics, reconciliation counts, validation status, browser QA status, and output paths.
 - Required audit files exist for the requested analysis, especially transaction classification, unified orders, reconciliation outputs, platform refresh status, target pacing summary, and action items when applicable.
-- L3 HTML reports have been rendered with `browser:browser`, with desktop and mobile checks, console error review, and horizontal overflow check.
+- L3 HTML reports have passed `scripts/browser_qa_report.mjs`, with desktop and mobile loads, screenshots, console error review, horizontal overflow check, mobile table internal-scroll check, and H1/current-range/KPI consistency with `report_bundle.json`.
 - The final user-facing response does not expose credentials, auth material, or secrets.
 
-7. Failure handling
+7. Context and token strategy
+
+- Do not read full raw CSVs, raw JSON exports, large `report_bundle.json`, or long logs into the chat context during normal L3 execution.
+- After the runner finishes, read only `run_summary.json`, `validation_summary.json`, `browser_qa_summary.json`, and, on failure, `error_summary.json`.
+- Open full `report_bundle.json` only when schema validation fails or a compact summary explicitly says bundle-level debugging is required.
+- Use scripts to return compact JSON for checks. Keep terminal output under 100 lines and keep raw rows on disk.
+- Production defaults to fresh pulls. Cache may be used only in explicit debug mode and must be marked in the manifest and summaries.
+
+8. Failure handling
 
 - Missing date range for a production recurring report: ask the user with recommended defaults; do not silently choose unless the user asked to proceed by default.
 - Missing target source: mark target pacing as `data_incomplete`; do not invent targets.
 - Required GA4/platform/Google Sheets/local-source/`browser:browser` capability unavailable: try to repair the exact required capability up to three times. If it still fails, stop before production work and report the failed capability, attempts, and blocked outputs.
 - Platform query returns unexpected date lenses or pagination behavior: pull a broad evidence window, filter locally by the business date lens, deduplicate by platform order/action ID, and log the method.
 - Local dependency missing: use the project-standard Python environment and dependency manifest when present. If absent, create or request a reproducible setup before treating temporary installs as production-ready; remove large temporary folders after one-off use and document remaining rerun requirements.
-- `browser:browser` unavailable: do not use Playwright or another renderer as a production-report workaround. Try to repair `browser:browser` up to three times; if it still fails, stop before delivering a production HTML report.
+- Automated browser QA unavailable: repair the Node/Playwright runtime through `setup-reporting` or the runner's runtime setup. If automated QA still fails, stop before delivering a production HTML report and read only `error_summary.json` plus `browser_qa_summary.json`.
